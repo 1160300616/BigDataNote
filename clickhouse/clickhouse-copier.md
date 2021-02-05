@@ -119,7 +119,7 @@
 </yandex>
 ```
 
-将schema.xml上传到zookeeper上，注意需要现在zk上把路径建好：
+将schema.xml上传到zookeeper上，注意需要先在zk上把路径建好：
 ```
 zkCli.sh create /clickhouse/copytasks/task1
 zkCli.sh create /clickhouse/copytasks/task1/description "`cat schema.xml`"
@@ -165,3 +165,6 @@ clickhouse-copier --config-file=zookeeper.xml --task-path=/clickhouse/copytasks/
 ```
 
 查看日志，如无报错即成功，可以手动校验原表和目的表行数是否一致进行验证数据是否丢失。
+
+### 问题  
+在测试过程中发现，如果对同一复制任务执行多次，会出现数据丢失，但是任务首次执行并没有出现这个问题，一般在生产上也不会做这样的操作。

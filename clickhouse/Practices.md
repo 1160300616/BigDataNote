@@ -39,6 +39,22 @@
 
 ## 运维相关事项
 
+### 优化参数
+- max_table_size_to_drop, max_partition_size_to_drop  
+此参数在 /etc/clickhouse-server/config.xml 中, 应用于需要删除表或分区的情况, 默认 50GB。
+如果待删除分区或表, 数据量达到了此参数值大小, 会删除失败。
+建议修改为 0, 代表无论数据多大, 都可以删除。
+
+- max_memory_usage  
+此参数在 users.xml 中配置。单次查询占用内存最大值,根据具体机器配置选择合适的参数
+
+- max_memory_usage_for_user
+此参数在 users.xml 中配置。某个用户可以使用的最大内存，建议将此参数配置，避免大量查询将服务端打挂。
+
+- background_pool_size
+此参数在 users.xml 中配置。后台merge线程数，建议配置为cpu核数的2倍。
+
+
 ### CPU
 CK的“快”与其对CPU的积极利用密不可分，所以CPU的单核性能和多核性能都要尽量好一点，16核32线程左右且带较高的睿频比较合适。CK设置中的max_threads参数控制单个查询所能利用的CPU线程数，默认与本机CPU的物理核心数相同，如果服务器是CK独占的，那么就不用改，否则就改小些。
 
