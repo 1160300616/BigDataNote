@@ -17,6 +17,16 @@ where active
 　　group by database, table
 ```
 
+## 查询clickhouse支持的数据类型
+```
+select * from  system.data_type_families 
+```
+
+## 查看支持的format格式
+```
+select * from   system.formats 
+```
+
 ## 创建分布式表
 ```
 create table migrate_test_v1 as migrate_test_v1_local 
@@ -47,9 +57,40 @@ ORDER BY x
 ```
 select query,user,query_start_time,query_duration_ms from system.query_log where user = 'default' order by query_start_time desc limit 100 
 ```
+## 远程表
+```
+select * from remote('目标IP',db.table,'user','passwd')
+```
+通过remote我们可以在一个节点访问另一个节点上的数据，使用比较方便灵活。
+
+## AggregatingMergeTree 结合物化视图
+- 建表
+```
+CREATE MATERIALIZED VIEW test.basic
+ENGINE = AggregatingMergeTree() PARTITION BY toYYYYMM(StartDate) ORDER BY (CounterID, StartDate)
+AS SELECT
+    CounterID,
+    StartDate,
+    sumState(Sign)    AS Visits,
+    uniqState(UserID) AS Users
+FROM test.visits
+GROUP BY CounterID, StartDate;
+```
+注意，在这里使用到了AggregateFunction，存储中间状态需要在聚合函数后面加上State
+- 查询
+```
+SELECT
+    StartDate,
+    sumMerge(Visits) AS Visits,
+    uniqMerge(Users) AS Users
+FROM test.basic
+GROUP BY StartDate
+ORDER BY StartDate;
+```
+注意，在这里使用到了AggregateFunction，获得最终结果需要在聚合函数后面加上Merge
 
 ## 权限控制
-经过测试，我们可以通过JDBC、客户端、HTTP创建用户
+经过测试，我们可以通过JDBC、客户端创建用户
 
 - 建立用户
 ```
