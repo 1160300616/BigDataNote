@@ -89,6 +89,13 @@ ORDER BY StartDate;
 ```
 注意，在这里使用到了AggregateFunction，获得最终结果需要在聚合函数后面加上Merge
 
+## 查看SQL执行计划
+
+```
+EXPLAIN SELECT * FROM TEST.TEST1
+```
+新版本clickhouse支持查看SQL执行计划，通过使用EXPLAIN关键字。
+
 ## 权限控制
 经过测试，我们可以通过JDBC、客户端创建用户
 
