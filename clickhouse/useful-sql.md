@@ -57,6 +57,87 @@ ORDER BY x
 ```
 select query,user,query_start_time,query_duration_ms from system.query_log where user = 'default' order by query_start_time desc limit 100 
 ```
+## 查看最近的查询SQL
+```
+SELECT   
+    event_time,   
+    user,   
+    query_id AS query,   
+    read_rows,   
+    read_bytes,   
+    result_rows,   
+    result_bytes,   
+    memory_usage,   
+    exception  
+FROM cluster('replica-1', system, query_log)  
+WHERE (event_date = today()) AND (event_time >= (now() - 60)) AND (is_initial_query = 1) AND (query NOT LIKE 'INSERT INTO%')  
+ORDER BY event_time DESC  
+LIMIT 100  
+```
+## 查看慢查询
+```
+SELECT   
+    event_time,   
+    user,   
+    query_id as query,  
+    query_duration_ms/1000,
+    read_rows,   
+    read_bytes,   
+    result_rows,   
+    result_bytes,   
+    memory_usage,   
+    exception  
+FROM cluster('replica-1', system, query_log)  
+WHERE (event_date = yesterday()) AND query_duration_ms > 30000 AND (is_initial_query = 1) AND (query NOT LIKE 'INSERT INTO%')  
+ORDER BY query_duration_ms desc  
+LIMIT 100  
+```
+
+## 查看top 10 大表(聚合结果)
+```
+SELECT   
+    database,   
+    table,   
+    sum(bytes_on_disk) AS bytes_on_disk  
+FROM cluster('replica-1', system, parts)  
+WHERE active AND (database != 'system')  
+GROUP BY   
+    database,   
+    table  
+ORDER BY bytes_on_disk DESC  
+LIMIT 10
+```
+
+## 查看top 10 大表（非聚合）
+```
+SELECT   
+    database,   
+    table,   
+    hostname() as host,
+    sum(bytes_on_disk) AS bytes_on_disk  
+FROM cluster('replica-1', system, parts)  
+WHERE active AND (database != 'system')  
+GROUP BY   
+    database,   
+    table  ,
+    host 
+ORDER BY bytes_on_disk DESC
+LIMIT 10
+```
+## 查看top10 查询用户
+```
+SELECT   
+    user,   
+    count(1) AS query_times,   
+    sum(read_bytes) AS query_bytes,   
+    sum(read_rows) AS query_rows  
+FROM cluster('replica-1', system, query_log)  
+WHERE (event_date = yesterday()) AND (is_initial_query = 1) AND (query NOT LIKE 'INSERT INTO%')  
+GROUP BY user  
+ORDER BY query_times DESC  
+LIMIT 10
+```
+
 ## 远程表
 ```
 select * from remote('目标IP',db.table,'user','passwd')
@@ -113,7 +194,7 @@ GRANT SELECT(x,y) ON db.table TO john WITH GRANT OPTION
 ```
 - db上所有表的select权限
 ```
-GRANT SELECT ON db.* TO john 
+GRANT ON CLUSTER 'cluster-test' SELECT ON db.* TO john 
 ```
 - 当前数据库上所有表的select权限
 ```
